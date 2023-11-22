@@ -39,9 +39,7 @@ ksTh_dict = {'default':'[9,9]'}
 # If this file exists, new run data is appended to it
 logName = 'ece_npx_log.csv'
 
-# Raw data directory = npx_directory
 # run_specs = name, gate, trigger and probes to process
-npx_directory = r'D:\NPIX\NPIX1\2023.10.24'
 run_CatGT = True   # set to False to sort/process previously processed data.
 
 # Each run_spec is a list of 4 strings:
@@ -55,11 +53,22 @@ run_CatGT = True   # set to False to sort/process previously processed data.
 #           these strings must match a key in the param dictionaries above.
 
 run_specs = [
-    ['2023_10_24__s1', '0', '0,0', '0', ['default'] ],
-    ['2023_10_24__s2', '0', '0,0', '0', ['default'] ],
-    ['2023_10_24__s3', '0', '0,0', '0', ['default'] ],
-    ['2023_10_24__s4', '0', '0,0', '0', ['default'] ],
-    ['2023_10_24__all', '0', '0,0', '0', ['default'] ],
+    ['2023_11_01__all', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.01'],
+    ['2023_11_03_all', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.03'],
+    ['2023_11_06_all', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.06'],
+    ['2023_11_08_all', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.08'],
+    ['2023_11_10_all', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.10'],
+    ['2023_11_12_all', '1', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.12'],
+    ['2023_11_14_all', '1', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.14'],
+    ['2023_11_18_all', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.18'],
+    ['2023_11_02_s4', '1', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.02'],
+    ['2023_11_04_s4', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.04'],
+    ['2023_11_07_s4', '1', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.07'],
+    ['2023_11_09_s4', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.09'],
+    ['2023_11_11_s4', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.11'],
+    ['2023_11_13_s4', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.13'],
+    ['2023_11_15_s4', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.15'],
+    ['2023_11_17_s4', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.17'],
 ]
 
 # ---------------
@@ -81,7 +90,7 @@ modules = [
 # Set to an existing directory; all output will be written here.
 # Output will be in the standard SpikeGLX directory structure:
 # run_folder/probe_folder/*.bin
-catGT_dest = npx_directory
+
 
 # ------------
 # CatGT params
@@ -181,14 +190,16 @@ try:
 except OSError:
     pass
 
-# check for existence of log file, create if not there
-logFullPath = os.path.join(catGT_dest, logName)
-if not os.path.isfile(logFullPath):
-    # create the log file, write header
-    log_from_json.writeHeader(logFullPath)
-
 
 for spec in run_specs:
+    npx_directory = spec[-1]
+    catGT_dest = npx_directory
+    # check for existence of log file, create if not there
+    logFullPath = os.path.join(catGT_dest, logName)
+    if not os.path.isfile(logFullPath):
+        # create the log file, write header
+        log_from_json.writeHeader(logFullPath)
+
     session_id = spec[0]
 
     # Make list of probes from the probe string

@@ -69,11 +69,12 @@ def createInputJson(output_file,
                     include_pcs = True
                     ):
 
+    BASEPATH = r'C:\Users\Peter_Wang_Alienware\Desktop'
     # hard coded paths to code on your computer and system
-    ecephys_directory = r'C:\Users\Peter\Desktop\PYTHON\ecephys_spike_sorting\ecephys_spike_sorting'
+    ecephys_directory = os.path.join(BASEPATH, 'python', 'ecephys', 'ecephys_spike_sorting')
 
     # location of kilosor respository and kilosort version
-    kilosort_repository = r'C:\Users\Peter\Desktop\MATLAB\Kilosort'
+    kilosort_repository = r'C:\Users\Peter_Wang_Alienware\Desktop\matlab\Kilosort'
 
     KS2ver = '3.0'      # must equal '3.0', '2.5' or '2.0', and match the kiilosort_repository
 
@@ -81,13 +82,13 @@ def createInputJson(output_file,
     if KS2ver == '3.0':
         include_pcs = False  # set to false for KS2ver = '3.0'
 
-    npy_matlab_repository = r'C:\Users\Peter\Desktop\MATLAB\npy-matlab'
-    catGTPath = r'C:\Users\Peter\Desktop\SOFTWARE\CatGT-win'
-    tPrime_path=r'C:\Users\Peter\Desktop\SOFTWARE\TPrime-win'
-    cWaves_path=r'C:\Users\Peter\Desktop\SOFTWARE\C_Waves-win'
+    npy_matlab_repository = os.path.join(BASEPATH, 'matlab', 'npy-matlab')
+    catGTPath = os.path.join(BASEPATH, 'software', 'CatGT-win')
+    tPrime_path = os.path.join(BASEPATH, 'software', 'TPrime-win')
+    cWaves_path = os.path.join(BASEPATH, 'software', 'C_Waves-win')
 
     # for config files and kilosort working space
-    kilosort_output_tmp = r'E:\NPIX\KS_DATA_TEMP'
+    kilosort_output_tmp = r'D:\NPIX\KS_DATA_TEMP'
 
     # derived directory names
     modules_directory = os.path.join(ecephys_directory,'modules')
@@ -154,7 +155,7 @@ def createInputJson(output_file,
     # for a Np 1.0 probe, 163 um => 32 sites
     nrows = np.sqrt((np.square(ks_whiteningRadius_um) - np.square(hpitch.get(probe_type))))/vpitch.get(probe_type)
     ks_whiteningRange = int(round(2*nrows*nColumn.get(probe_type)))
-    ks_whiteningRange = 32 # hard-coded
+    # ks_whiteningRange = 32 # hard-coded
     if ks_whiteningRange > 384:
         ks_whiteningRange = 384
 
