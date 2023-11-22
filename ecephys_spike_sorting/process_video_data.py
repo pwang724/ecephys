@@ -103,7 +103,7 @@ bool_do = 1
 bool_save_figs = 1
 figure_path = os.path.join(folder_path, 'FIGURES')
 
-ixs = np.arange(len(mouse.exp_params.keys()))
+ixs = np.arange(len(mouse.exp_params.keys()))[3:]
 
 # fixed params
 colors_lick = [
@@ -192,7 +192,7 @@ if bool_do:
                 _draw_layer(mat, [color_water, color_water])
             # licks
             if len(np.unique(lick_per_stimulus[i])) == 2:
-                c = [colors_lick[1]]
+                c = [colors_lick[1], colors_lick[1]]
             else:
                 c = colors_lick
             _draw_layer(lick_per_stimulus[i], c, alpha=1)
