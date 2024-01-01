@@ -1,5 +1,6 @@
 import os
 import sys
+import glob
 import subprocess
 
 from helpers import SpikeGLX_utils
@@ -39,9 +40,8 @@ ksTh_dict = {'default':'[9,9]'}
 # If this file exists, new run data is appended to it
 logName = 'ece_npx_log.csv'
 
-# run_specs = name, gate, trigger and probes to process
-run_CatGT = True   # set to False to sort/process previously processed data.
 
+# run_specs = name, gate, trigger and probes to process
 # Each run_spec is a list of 4 strings:
 #   undecorated run name (no g/t specifier, the run field in CatGT)
 #   gate index, as a string (e.g. '0')
@@ -52,37 +52,40 @@ run_CatGT = True   # set to False to sort/process previously processed data.
 #   brain regions, list of strings, one per probe, to set region specific params
 #           these strings must match a key in the param dictionaries above.
 
+
 run_specs = [
-    ['2023_11_01__all', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.01'],
-    ['2023_11_03_all', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.03'],
-    ['2023_11_06_all', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.06'],
-    ['2023_11_08_all', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.08'],
-    ['2023_11_10_all', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.10'],
-    ['2023_11_12_all', '1', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.12'],
-    ['2023_11_14_all', '1', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.14'],
-    ['2023_11_18_all', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.18'],
-    ['2023_11_02_s4', '1', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.02'],
-    ['2023_11_04_s4', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.04'],
-    ['2023_11_07_s4', '1', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.07'],
+    # ['2023_11_01__all', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.01'],
+    # ['2023_11_03_all', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.03'],
+    # ['2023_11_06_all', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.06'],
+    # ['2023_11_08_all', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.08'],
+    # ['2023_11_10_all', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.10'],
+    # ['2023_11_12_all', '1', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.12'],
+    # ['2023_11_14_all', '1', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.14'],
+    # ['2023_11_18_all', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.18'],
+    # ['2023_11_02_s4', '1', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.02'],
+    # ['2023_11_04_s4', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.04'],
+    # ['2023_11_07_s4', '1', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.07'],
     ['2023_11_09_s4', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.09'],
-    ['2023_11_11_s4', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.11'],
-    ['2023_11_13_s4', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.13'],
-    ['2023_11_15_s4', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.15'],
-    ['2023_11_17_s4', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.17'],
+    # ['2023_11_11_s4', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.11'],
+    # ['2023_11_13_s4', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.13'],
+    # ['2023_11_15_s4', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.15'],
+    # ['2023_11_17_s4', '0', '0,0', '0', ['default'], r'D:\NPIX\NPIX1\2023.11.17'],
 ]
 
 # ---------------
 # Modules List
 # ---------------
 # List of modules to run per probe; CatGT and TPrime are called once for each run.
+
+run_CatGT = True   # set to False to sort/process previously processed data.
+run_ap = False # use catGT to rerun probe channels
 modules = [
-            'catGT_helper',
-            'kilosort_helper',
-            'kilosort_postprocessing',
-            'noise_templates',
-            'mean_waveforms',
-            'quality_metrics'
-			]
+    # 'kilosort_helper',
+    # 'kilosort_postprocessing',
+    # 'noise_templates', # do not include
+    'mean_waveforms',
+    'quality_metrics'
+]
 
 # ------------------
 # Output destination
@@ -106,7 +109,6 @@ loccar_max = 160
 # if selected, must also include a range for filtering in the catGT_cmd_string
 process_lf = False
 
-
 # CatGT commands for bandpass filtering, artifact correction, and zero filling
 # Note 1: directory naming in this script requires -prb_fld and -out_prb_fld
 # Note 2: this command line includes specification of edge extraction
@@ -115,7 +117,8 @@ process_lf = False
 catGT_cmd_string = '-prb_fld -out_prb_fld -apfilter=butter,12,300,10000 -lffilter=butter,12,1,500 -gfix=0.4,0.10,0.02 '
 
 ni_present = True
-ni_extract_string = '-xa=0,0,0,1,3,500 -xia=0,0,1,3,3,0 -xd=0,0,-1,1,50 -xid=0,0,-1,2,1.7 -xid=0,0,-1,3,5'
+# ni_extract_string = '-xa=0,0,1,1,3,0 -xia=0,0,1,3,3,0 -xd=0,0,-1,1,50 -xid=0,0,-1,2,1.7 -xid=0,0,-1,3,5'
+ni_extract_string = '-xa=0,0,1,3,3,0 -xia=0,0,1,3,3,0'
 
 # ----------------------
 # KS2 or KS25 parameters
@@ -131,7 +134,7 @@ ks_whiteningRadius_um = 163
 ks_minfr_goodchannels = 0.1
 ks_CAR = 0          # CAR already done in catGT
 ks_nblocks = 1      # for KS2.5 and KS3; 1 for rigid registration in drift correction,
-                    # higher numbers to allow different drift for different 'blocks' of the probe
+# higher numbers to allow different drift for different 'blocks' of the probe
 
 # If running KS20_for_preprocessed_data:
 # (https://github.com/jenniferColonell/KS20_for_preprocessed_data)
@@ -240,11 +243,17 @@ for spec in run_specs:
         # sync_extract = '-SY=' + prb +',-1,6,500'
 
         # if this is the first probe proceessed, process the ni stream with it
+        if run_ap:
+            catGT_stream_string = '-ap '
+        else:
+            catGT_stream_string = ''
+
         if i == 0 and ni_present:
-            catGT_stream_string = '-ap -ni'
+            # catGT_stream_string = '-ap -ni'
+            catGT_stream_string = catGT_stream_string + '-ni'
             extract_string = ni_extract_string
         else:
-            catGT_stream_string = '-ap'
+            # catGT_stream_string = '-ap'
             extract_string = ''
 
         if process_lf:
@@ -264,26 +273,25 @@ for spec in run_specs:
         print(input_meta_fullpath)
 
         info = createInputJson(catGT_input_json[i], npx_directory=npx_directory,
-                                       continuous_file = continuous_file,
-                                       kilosort_output_directory=catGT_dest,
-                                       spikeGLX_data = True,
-                                       input_meta_path = input_meta_fullpath,
-                                       catGT_run_name = spec[0],
-                                       gate_string = spec[1],
-                                       trigger_string = trigger_str,
-                                       probe_string = prb,
-                                       catGT_stream_string = catGT_stream_string,
-                                       catGT_car_mode = car_mode,
-                                       catGT_loccar_min_um = loccar_min,
-                                       catGT_loccar_max_um = loccar_max,
-                                       catGT_cmd_string = catGT_cmd_string + ' ' + extract_string,
-                                       extracted_data_directory = catGT_dest
-                                       )
+                               continuous_file = continuous_file,
+                               kilosort_output_directory=catGT_dest,
+                               spikeGLX_data = True,
+                               input_meta_path = input_meta_fullpath,
+                               catGT_run_name = spec[0],
+                               gate_string = spec[1],
+                               trigger_string = trigger_str,
+                               probe_string = prb,
+                               catGT_stream_string = catGT_stream_string,
+                               catGT_car_mode = car_mode,
+                               catGT_loccar_min_um = loccar_min,
+                               catGT_loccar_max_um = loccar_max,
+                               catGT_cmd_string = catGT_cmd_string + ' ' + extract_string,
+                               extracted_data_directory = catGT_dest
+                               )
 
 
         #create json files for the other modules
         session_id.append(spec[0] + '_imec' + prb)
-
         module_input_json.append(os.path.join(json_directory, session_id[i] + '-input.json'))
 
 
@@ -310,56 +318,83 @@ for spec in run_specs:
         print(data_directory[i])
         print(continuous_file)
 
+        # clean-up of kilosort labels
+        names = [
+            'cluster_ContamPct.tsv',
+            # 'cluster_group.tsv',
+            'cluster_KSLabel.tsv']
+        for name in names:
+            file = os.path.join(kilosort_output_dir, name)
+            if os.path.exists(file):
+                os.remove(file)
+                print(f'Removed: {file}')
+            else:
+                print(f'Does not exist: {file}')
+
+        # cleanup of ecephys labels. Do this before running anything
+        ecephys_files = [
+            'clus_Table*.npy',
+            'mean_waveforms*.npy',
+            'cluster_snr*.npy',
+            'waveform_metrics*.csv',
+            'metrics*.csv',
+            'cluster_snr*.tsv'
+        ]
+        for name in ecephys_files:
+            files = glob.glob(os.path.join(kilosort_output_dir, name))
+            for file in files:
+                os.remove(file)
+                print(f'Removed: {file}')
+
         # get region specific parameters
         ks_Th = ksTh_dict.get(spec[4][i])
         refPerMS = refPerMS_dict.get(spec[4][i])
         print( 'ks_Th: ' + repr(ks_Th) + ' ,refPerMS: ' + repr(refPerMS))
 
         info = createInputJson(module_input_json[i], npx_directory=npx_directory,
-	                                   continuous_file = continuous_file,
-                                       spikeGLX_data = True,
-                                       input_meta_path = input_meta_fullpath,
-									   kilosort_output_directory=kilosort_output_dir,
-                                       ks_make_copy = ks_make_copy,
-                                       noise_template_use_rf = False,
-                                       catGT_run_name = session_id[i],
-                                       gate_string = spec[1],
-                                       probe_string = spec[3],
-                                       ks_remDup = ks_remDup,
-                                       ks_finalSplits = 1,
-                                       ks_labelGood = 1,
-                                       ks_saveRez = ks_saveRez,
-                                       ks_copy_fproc = ks_copy_fproc,
-                                       ks_minfr_goodchannels = ks_minfr_goodchannels,
-                                       ks_whiteningRadius_um = ks_whiteningRadius_um,
-                                       ks_doFilter = ks_doFilter,
-                                       ks_Th = ks_Th,
-                                       ks_CSBseed = 1,
-                                       ks_LTseed = 1,
-                                       ks_templateRadius_um = ks_templateRadius_um,
-                                       ks_nblocks = ks_nblocks,
-                                       ks_CAR = ks_CAR,
-                                       extracted_data_directory = data_directory[i],
-                                       event_ex_param_str = event_ex_param_str,
-                                       c_Waves_snr_um = c_Waves_snr_um,
-                                       qm_isi_thresh = refPerMS/1000
-                                       )
+                               continuous_file = continuous_file,
+                               spikeGLX_data = True,
+                               input_meta_path = input_meta_fullpath,
+                               kilosort_output_directory=kilosort_output_dir,
+                               ks_make_copy = ks_make_copy,
+                               noise_template_use_rf = False,
+                               catGT_run_name = session_id[i],
+                               gate_string = spec[1],
+                               probe_string = spec[3],
+                               ks_remDup = ks_remDup,
+                               ks_finalSplits = 1,
+                               ks_labelGood = 1,
+                               ks_saveRez = ks_saveRez,
+                               ks_copy_fproc = ks_copy_fproc,
+                               ks_minfr_goodchannels = ks_minfr_goodchannels,
+                               ks_whiteningRadius_um = ks_whiteningRadius_um,
+                               ks_doFilter = ks_doFilter,
+                               ks_Th = ks_Th,
+                               ks_CSBseed = 1,
+                               ks_LTseed = 1,
+                               ks_templateRadius_um = ks_templateRadius_um,
+                               ks_nblocks = ks_nblocks,
+                               ks_CAR = ks_CAR,
+                               extracted_data_directory = data_directory[i],
+                               event_ex_param_str = event_ex_param_str,
+                               c_Waves_snr_um = c_Waves_snr_um,
+                               qm_isi_thresh = refPerMS/1000
+                               )
 
         # copy json file to data directory as record of the input parameters
-
 
     # loop over probes for processing.
     for i, prb in enumerate(prb_list):
 
         run_one_probe.runOne( session_id[i],
-                 json_directory,
-                 data_directory[i],
-                 run_CatGT,
-                 catGT_input_json[i],
-                 catGT_output_json[i],
-                 modules,
-                 module_input_json[i],
-                 logFullPath )
+                              json_directory,
+                              data_directory[i],
+                              run_CatGT,
+                              catGT_input_json[i],
+                              catGT_output_json[i],
+                              modules,
+                              module_input_json[i],
+                              logFullPath )
 
 
 
@@ -381,24 +416,24 @@ for spec in run_specs:
         output_json = os.path.join(json_directory, session_id + '-output.json')
 
         info = createInputJson(input_json, npx_directory=npx_directory,
-    	                                   continuous_file = continuous_file,
-                                           spikeGLX_data = True,
-                                           input_meta_path = input_meta_fullpath,
-                                           catGT_run_name = spec[0],
-    									   kilosort_output_directory=kilosort_output_dir,
-                                           extracted_data_directory = catGT_dest,
-                                           tPrime_ni_ex_list = ni_extract_string,
-                                           event_ex_param_str = event_ex_param_str,
-                                           sync_period = 1.0,
-                                           toStream_sync_params = toStream_sync_params,
-                                           tPrime_3A = False,
-                                           toStream_path_3A = ' ',
-                                           fromStream_list_3A = list(),
-                                           ks_output_tag = ks_output_tag
-                                           )
+                               continuous_file = continuous_file,
+                               spikeGLX_data = True,
+                               input_meta_path = input_meta_fullpath,
+                               catGT_run_name = spec[0],
+                               kilosort_output_directory=kilosort_output_dir,
+                               extracted_data_directory = catGT_dest,
+                               tPrime_ni_ex_list = ni_extract_string,
+                               event_ex_param_str = event_ex_param_str,
+                               sync_period = 1.0,
+                               toStream_sync_params = toStream_sync_params,
+                               tPrime_3A = False,
+                               toStream_path_3A = ' ',
+                               fromStream_list_3A = list(),
+                               ks_output_tag = ks_output_tag
+                               )
 
         command = sys.executable + " -W ignore -m ecephys_spike_sorting.modules." + 'tPrime_helper' + " --input_json " + input_json \
-    		          + " --output_json " + output_json
+                  + " --output_json " + output_json
         subprocess.check_call(command.split(' '))
 
 

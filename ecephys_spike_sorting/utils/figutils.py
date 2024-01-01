@@ -12,7 +12,7 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 FIGURE_PATH = os.path.join(ROOT_DIR, '_FIGURES')
 
 
-def save_fig(save_path, figname='', dpi=300, pdf=False, show=True, close=True, transparent=True, ext='png',
+def save_fig(save_path, figname='', dpi=300, pdf=False, show=True, close=True, transparent=False, ext='png',
              verbose=True):
     os.makedirs(save_path, exist_ok=True)
     if transparent:
@@ -295,9 +295,10 @@ def imagePanes(mats,
             ax = axs[i]
         plt.sca(ax)
         if i == 0:
-            axargs.update({'yticks': np.arange(0, mats[0].shape[0], 10)})
+            pass
+            # axargs.update({'yticks': np.arange(0, mats[0].shape[0], 10)})
         else:
-            axargs.update({'yticks': []})
+            axargs.update({'yticks': [], 'yticklabels': []})
 
         imagePanel(mats[i],
                    width=3,
@@ -323,15 +324,13 @@ def imagePanes(mats,
         cb.outline.set_linewidth(0)
         cb.set_label(cbar_title, rotation=270)
         plt.sca(axs[0])
-
-    if save:
-        if saveFolder is None:
-            saveFolder = os.path.join(FIGURE_PATH, 'panel')
-        save_fig(saveFolder, saveName, show=False, close=False)
-        save_fig(saveFolder, saveName, show=False, pdf=True)
-
-    if show:
-        plt.show()
+    #
+    # if save:
+    #     save_fig(saveFolder, saveName, show=False, close=False)
+    #     save_fig(saveFolder, saveName, show=False, pdf=True)
+    #
+    # if show:
+    #     plt.show()
 
 def label_plot(mask, y1, y2, ax=None, label=None):
     if ax is None:

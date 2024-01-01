@@ -92,18 +92,22 @@ mouse = configs.NPIX1
 folder_path = os.path.join(configs.BASE_PATH, mouse.path)
 stimuli = list(mouse.stimuli_params.keys())
 days = list(mouse.exp_params.keys())
-xys = [x[0] for x in mouse.exp_params.values()]
-threshs = [x[1] for x in mouse.exp_params.values()]
+threshs = [x[2] for x in mouse.exp_params.values()]
 directories = [folder_path[:-1] + day for day in days]
 fps = mouse.fps
 total_frames = int(mouse.duration * fps)
+cam = mouse.camera
+if cam == 'CAM_0':
+    xys = [x[0] for x in mouse.exp_params.values()]
+else:
+    xys = [x[1] for x in mouse.exp_params.values()]
+
 
 bool_debug = 0
 bool_do = 1
-bool_save_figs = 1
 figure_path = os.path.join(folder_path, 'FIGURES')
 
-ixs = np.arange(len(mouse.exp_params.keys()))[3:]
+ixs = np.arange(len(mouse.exp_params.keys()))
 
 # fixed params
 colors_lick = [
@@ -127,14 +131,14 @@ if bool_debug:
     current_dir = os.path.join(folder_path, current_day, 'behavior')
     xys_test = xys[ix]
     thresh_test = threshs[ix]
-    mp4_files = {stim: sorted(glob.glob(os.path.join(current_dir, f'*_{stim}_CAM_1.mp4'))) for stim in stimuli}
+    mp4_files = {stim: sorted(glob.glob(os.path.join(current_dir, f'*_{stim}_{cam}.mp4'))) for stim in stimuli}
 
     us_files = mp4_files['US']
     print(us_files[0])
-    check_roi_video(us_files[0], xys_test, step_size=fps//2, min_frame=9*fps, max_frames=total_frames)
+    check_roi_video(us_files[0], xys_test, step_size=fps*2, min_frame=9*fps, max_frames=total_frames)
     process_video(us_files[0], xys_test, thresh_test, plot=True, max_frames=total_frames)
     print(us_files[-1])
-    check_roi_video(us_files[-1], xys_test, step_size=fps//2, min_frame=9*fps, max_frames=total_frames)
+    check_roi_video(us_files[-1], xys_test, step_size=fps*2, min_frame=9*fps, max_frames=total_frames)
     process_video(us_files[-1], xys_test, thresh_test, plot=True, max_frames=total_frames)
 
 if bool_do:
@@ -210,5 +214,4 @@ if bool_do:
             ax.spines['bottom'].set_visible(False)
             ax.spines['left'].set_visible(False)
         plt.tight_layout()
-        if bool_save_figs:
-            figutils.save_fig(figure_path, current_day, transparent=False, show=True)
+        figutils.save_fig(figure_path, current_day, transparent=False, show=True)
