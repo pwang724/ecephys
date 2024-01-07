@@ -12,6 +12,7 @@ import pandas as pd
 import configs
 import glob
 from utils import figutils
+from utils import ioutils
 
 def check_roi_video(path: str, xys: list, step_size: int=40, min_frame: int=0, max_frames:int=600):
     '''
@@ -65,6 +66,7 @@ def process_video(path: str, xys: list, threshold: float, plot: bool=False, max_
 
     # Compute absolute diff between frames
     deltas = [compute_delta(cropped_ROI[x], cropped_ROI[x+1]) for x in range(len(cropped_ROI) - 1)]
+    deltas = np.r_[0, deltas]
     deltas_bin = [1 if x >= threshold else 0 for x in deltas]
     if plot:
         fig, axs = plt.subplots(2, 1)
@@ -159,10 +161,10 @@ if bool_do:
             for vid in tqdm.tqdm(current_files):
                 # ind_delta, _ = process_video(vid, xys_test, 200) #, plot=True) # before binarization
                 _, ind_delta = process_video(vid, xys_test, thresh_test) #200)  # , plot=True)
-                if len(ind_delta) != total_frames-1:
-                    if len(ind_delta) < total_frames-1:
+                if len(ind_delta) != total_frames:
+                    if len(ind_delta) < total_frames:
                         # Left padding seems correct to start, but later files warrant right padding, using left for now
-                        ind_delta = [0.5]*(total_frames-1-len(ind_delta)) + ind_delta
+                        ind_delta = [0.5]*(total_frames-len(ind_delta)) + ind_delta
                     else:
                         raise ValueError("File too long!")
                 all_deltas.append(ind_delta)
@@ -173,6 +175,12 @@ if bool_do:
             else:
                 lick_per_stimulus.append(None)
                 indices_per_stimulus.append(None)
+
+        save_path = os.path.join(folder_path, current_day, 'PROCESSED')
+        os.makedirs(save_path, exist_ok=True)
+        package = {'stim': stimuli, 'licks': lick_per_stimulus, 'trial_index': indices_per_stimulus}
+        ioutils.psave(package, os.path.join(save_path, 'behavior_package'))
+        print(f"Saved: {os.path.join(save_path, 'behavior_package')}")
 
         # Plot
         fig, axes = figutils.pretty_fig(figsize=(3*len(stimuli), 5), rows=1, cols=len(stimuli))

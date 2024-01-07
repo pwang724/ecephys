@@ -66,56 +66,56 @@ def calculate_waveform_metrics(waveforms,
 
     timestamps = np.linspace(0, num_samples / sample_rate, new_sample_count)
 
-    # duration = calculate_waveform_duration(mean_1D_waveform, timestamps)
-    # halfwidth = calculate_waveform_halfwidth(mean_1D_waveform, timestamps)
-    # PT_ratio = calculate_waveform_PT_ratio(mean_1D_waveform)
-    # repolarization_slope = calculate_waveform_repolarization_slope(
-    #     mean_1D_waveform, timestamps)
-    # recovery_slope = calculate_waveform_recovery_slope(
-    #     mean_1D_waveform, timestamps)
+    duration = calculate_waveform_duration(mean_1D_waveform, timestamps)
+    halfwidth = calculate_waveform_halfwidth(mean_1D_waveform, timestamps)
+    PT_ratio = calculate_waveform_PT_ratio(mean_1D_waveform)
+    repolarization_slope = calculate_waveform_repolarization_slope(
+        mean_1D_waveform, timestamps)
+    recovery_slope = calculate_waveform_recovery_slope(
+        mean_1D_waveform, timestamps)
 
     amplitude, spread, velocity_above, velocity_below = calculate_2D_features(
         mean_2D_waveform, timestamps, local_peak, spread_threshold, site_range, site_spacing)
 
-    # data = [[cluster_id, epoch_name, peak_channel, snr, duration, halfwidth, PT_ratio, repolarization_slope,
-    #           recovery_slope, amplitude, spread, velocity_above, velocity_below]]
-    #
-    # metrics = pd.DataFrame(data,
-    #                        columns=['cluster_id', 'epoch_name', 'peak_channel', 'snr', 'duration', 'halfwidth',
-    #                                  'PT_ratio', 'repolarization_slope', 'recovery_slope', 'amplitude',
-    #                                  'spread', 'velocity_above', 'velocity_below'])
-    data = [[
-        cluster_id,
-        # epoch_name,
-        peak_channel,
-        # snr,
-        # duration,
-        # halfwidth,
-        # PT_ratio,
-        # repolarization_slope,
-        # recovery_slope,
-        # amplitude,
-        # spread,
-        # velocity_above,
-        # velocity_below
-    ]]
+    data = [[cluster_id, epoch_name, peak_channel, snr, duration, halfwidth, PT_ratio, repolarization_slope,
+              recovery_slope, amplitude, spread, velocity_above, velocity_below]]
 
     metrics = pd.DataFrame(data,
-                           columns=[
-                               'cluster_id',
-                               # 'epoch_name',
-                               'peak_channel',
-                               # 'snr',
-                               # 'duration',
-                               # 'halfwidth',
-                               # 'PT_ratio',
-                               # 'repolarization_slope',
-                               # 'recovery_slope',
-                               # 'amplitude',
-                               # 'spread',
-                               # 'velocity_above',
-                               # 'velocity_below'
-                           ])
+                           columns=['cluster_id', 'epoch_name', 'peak_channel', 'snr', 'duration', 'halfwidth',
+                                     'PT_ratio', 'repolarization_slope', 'recovery_slope', 'amplitude',
+                                     'spread', 'velocity_above', 'velocity_below'])
+    # data = [[
+    #     cluster_id,
+    #     # epoch_name,
+    #     peak_channel,
+    #     # snr,
+    #     # duration,
+    #     # halfwidth,
+    #     # PT_ratio,
+    #     # repolarization_slope,
+    #     # recovery_slope,
+    #     # amplitude,
+    #     # spread,
+    #     # velocity_above,
+    #     # velocity_below
+    # ]]
+    #
+    # metrics = pd.DataFrame(data,
+    #                        columns=[
+    #                            'cluster_id',
+    #                            # 'epoch_name',
+    #                            'peak_channel',
+    #                            # 'snr',
+    #                            # 'duration',
+    #                            # 'halfwidth',
+    #                            # 'PT_ratio',
+    #                            # 'repolarization_slope',
+    #                            # 'recovery_slope',
+    #                            # 'amplitude',
+    #                            # 'spread',
+    #                            # 'velocity_above',
+    #                            # 'velocity_below'
+    #                        ])
 
     return metrics
 
@@ -188,14 +188,14 @@ def calculate_waveform_metrics_from_avg(avg_waveform,
 
     timestamps = np.linspace(0, num_samples / sample_rate, new_sample_count)
 
-    # duration = calculate_waveform_duration(mean_1D_waveform, timestamps)
-    # halfwidth = calculate_waveform_halfwidth(mean_1D_waveform, timestamps)
-    # PT_ratio = calculate_waveform_PT_ratio(mean_1D_waveform)
-    # repolarization_slope = calculate_waveform_repolarization_slope(
-    #     mean_1D_waveform, timestamps)
-    # recovery_slope = calculate_waveform_recovery_slope(
-    #     mean_1D_waveform, timestamps)
-
+    duration = calculate_waveform_duration(mean_1D_waveform, timestamps)
+    halfwidth = calculate_waveform_halfwidth(mean_1D_waveform, timestamps)
+    PT_ratio = calculate_waveform_PT_ratio(mean_1D_waveform)
+    repolarization_slope = calculate_waveform_repolarization_slope(
+        mean_1D_waveform, timestamps)
+    recovery_slope = calculate_waveform_recovery_slope(
+        mean_1D_waveform, timestamps)
+    #
     amplitude, spread, velocity_above, velocity_below = calculate_2D_features(
         mean_2D_waveform, timestamps, local_peak, site_x, site_y, spread_threshold, site_range)
 
@@ -203,16 +203,16 @@ def calculate_waveform_metrics_from_avg(avg_waveform,
         cluster_id,
         # epoch_name,
         peak_channel,
-        # snr,
-        # duration,
-        # halfwidth,
-        # PT_ratio,
-        # repolarization_slope,
-        # recovery_slope,
-        # amplitude,
-        # spread,
-        # velocity_above,
-        # velocity_below
+        snr, #
+        duration,
+        halfwidth,
+        PT_ratio,
+        repolarization_slope,
+        recovery_slope,
+        amplitude,
+        spread,
+        velocity_above,
+        velocity_below
     ]]
 
     metrics = pd.DataFrame(data,
@@ -220,16 +220,16 @@ def calculate_waveform_metrics_from_avg(avg_waveform,
                                'cluster_id',
                                # 'epoch_name',
                                'peak_channel',
-                               # 'snr',
-                               # 'duration',
-                               # 'halfwidth',
-                               # 'PT_ratio',
-                               # 'repolarization_slope',
-                               # 'recovery_slope',
-                               # 'amplitude',
-                               # 'spread',
-                               # 'velocity_above',
-                               # 'velocity_below'
+                               'snr', #
+                               'duration',
+                               'halfwidth',
+                               'PT_ratio',
+                               'repolarization_slope',
+                               'recovery_slope',
+                               'amplitude',
+                               'spread',
+                               'velocity_above',
+                               'velocity_below'
                            ])
 
     return metrics

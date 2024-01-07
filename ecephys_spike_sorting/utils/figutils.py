@@ -102,7 +102,7 @@ def plotPanel(dffs,
               saveFolder=None,
               saveName=None):
     '''
-    :param dffs: matrix of dimensions [cells, frames]
+    :param dffs: matrix of dimensions [trials, frames]
     '''
     gap = (ymax - ymin) * gap_between_plots
     nCells = dffs.shape[0]
@@ -176,7 +176,9 @@ def imagePanel(dffs,
                show=True,
                save=False,
                saveFolder=None,
-               saveName=None):
+               saveName=None,
+               cmap='bwr'
+               ):
     '''
     :param dffs: matrix of dimensions [cells, frames]
     '''
@@ -186,7 +188,7 @@ def imagePanel(dffs,
         plt.figure(figsize=(width, nCells * height_per_cell))
         ax = plt.gca()
 
-    plt.set_cmap('bwr')
+    plt.set_cmap(cmap)
     norm = matplotlib.colors.TwoSlopeNorm(vmin=vmin, vcenter=vcenter, vmax=vmax)
     plt.imshow(dffs, interpolation='none', norm=norm, origin='upper')
     plt.axis('auto')

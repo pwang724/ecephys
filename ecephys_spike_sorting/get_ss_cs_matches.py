@@ -28,9 +28,10 @@ bool_plot_summary = True
 firing_rate_cutoff = 0.01
 amplitude_cutoff = 0.05
 presence_ratio_cutoff = 0.7
-adjacency_threshold = 80 #um, # peak channel of CS waveform must be within this threshold distance away from peak channel of SS waveform
+adjacency_threshold = 200 #um, # peak channel of CS waveform must be within this threshold distance away from peak channel of SS waveform
 ss_min_firing_rate_soft = 30
 cs_max_firing_rate_soft = 4
+cs_min_firing_rate_soft = 0.4
 hard_inh_thresh = 0.3
 
 ccg_win_size = 80 # ms
@@ -51,6 +52,10 @@ for date in dates:
         phy_folders.append(data_folder)
     except:
         pass
+
+# override
+base_folders = [r'D:\NPIX\NPIX2\npix2_2024.01.06']
+phy_folders = [r'D:\NPIX\NPIX2\npix2_2024.01.06\catgt_s2bot_g0\s2bot_g0_imec0\imec0_ks2']
 
 for base_folder, phy_folder in zip(base_folders, phy_folders):
     date_folder = os.path.dirname(os.path.dirname(os.path.dirname(phy_folder)))
@@ -151,6 +156,7 @@ for base_folder, phy_folder in zip(base_folders, phy_folders):
     # putative CS clusters
     criteria = np.array([
         metrics['firing_rate'].to_numpy() < cs_max_firing_rate_soft,
+        metrics['firing_rate'].to_numpy() > cs_min_firing_rate_soft,
         metrics['QC']
     ])
     good_mask = np.all(criteria, axis=0)
@@ -175,7 +181,8 @@ for base_folder, phy_folder in zip(base_folders, phy_folders):
                                   win_size=ccg_win_size,
                                   normalize='Hertz',
                                   sav=False,
-                                  again=True)
+                                  again=True,
+                                  verbose=False)
                 cc = c[0, 1]
                 cc = savgol_filter(cc, window_length=ccg_smooth_win, polyorder=0)
                 middle = int(1 + ccg_win_size / 2)

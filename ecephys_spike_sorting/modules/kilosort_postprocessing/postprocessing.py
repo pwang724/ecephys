@@ -7,9 +7,9 @@ from collections import OrderedDict
 from ...common.utils import printProgressBar
 from ...common.utils import getSortResults
 
-def remove_double_counted_spikes(spike_times, spike_clusters, spike_templates, 
-                                 amplitudes, channel_map, channel_pos, templates, pc_features, 
-                                 pc_feature_ind, template_features, cluster_amplitude, 
+def remove_double_counted_spikes(spike_times, spike_clusters, spike_templates,
+                                 amplitudes, channel_map, channel_pos, templates, pc_features,
+                                 pc_feature_ind, template_features, cluster_amplitude,
                                  sample_rate, params, epochs = None):
 
     """ Remove putative double-counted spikes from Kilosort outputs
@@ -17,7 +17,7 @@ def remove_double_counted_spikes(spike_times, spike_clusters, spike_templates,
     Inputs:
     ------
     spike_times : numpy.ndarray (num_spikes x 0)
-        Spike times in samples 
+        Spike times in samples
     spike_clusters : numpy.ndarray (num_spikes x 0)
         Cluster IDs for each spike time
     spike_templates : numpy.ndarray (num_spikes x 0)
@@ -27,7 +27,7 @@ def remove_double_counted_spikes(spike_times, spike_clusters, spike_templates,
     channel_map : numpy.ndarray (num_units x 0)
         Original data channel for pc_feature_ind array
     channel_pos : numpy.ndarray (num_channels x 2)
-        X and Z coordinates for each channel used in the sort    
+        X and Z coordinates for each channel used in the sort
     templates : numpy.ndarray (num_units x num_channels x num_samples)
         Spike templates for each unit
     pc_features : numpy.ndarray (num_spikes x num_pcs x num_channels)
@@ -44,7 +44,7 @@ def remove_double_counted_spikes(spike_times, spike_clusters, spike_templates,
     epochs : list of Epoch objects
         contains information on Epoch start and stop times
 
-    
+
     Outputs:
     --------
     spike_times : numpy.ndarray (num_spikes x 0)
@@ -63,6 +63,11 @@ def remove_double_counted_spikes(spike_times, spike_clusters, spike_templates,
         Matrix indicating number of spikes removed for each pair of clusters
 
     """
+    if len(cluster_amplitude) < templates.shape[0]:
+        print(f'size mismatch between n clusters and templates: {len(cluster_amplitude)}, {templates.shape[0]}')
+        print(f'padding cluster amplitudes...')
+        cluster_amplitude = np.r_[cluster_amplitude, np.zeros(templates.shape[0]-len(cluster_amplitude))]
+
     include_pcs = params['include_pcs']
 
     peak_chan_idx = np.squeeze(np.argmax(np.max(templates,1) - np.min(templates,1),1))
@@ -70,17 +75,17 @@ def remove_double_counted_spikes(spike_times, spike_clusters, spike_templates,
     # to accomdate case where matlab writes out chan map as (1,nchan) instead of (nchan,1)
     channel_map = np.squeeze(channel_map);
     peak_channels = np.squeeze(channel_map[peak_chan_idx])
-    
+
     num_clusters = peak_channels.size;
-    
+
     order = np.argsort(peak_channels)
-    
+
     unit_list = np.arange(order.size+1)
-    
+
     sorted_unit_list = unit_list[order]
 
     overlap_matrix = np.zeros((num_clusters, num_clusters), dtype = 'int')
-    
+
 
     within_unit_overlap_samples = int(params['within_unit_overlap_window'] * sample_rate)
     between_unit_overlap_samples = int(params['between_unit_overlap_window'] * sample_rate)
@@ -101,12 +106,12 @@ def remove_double_counted_spikes(spike_times, spike_clusters, spike_templates,
 
         spikes_to_remove = np.concatenate((spikes_to_remove, for_unit1[to_remove]))
 
-    spike_times, spike_clusters, spike_templates, amplitudes, pc_features, template_features = remove_spikes(spike_times, 
-                                                                        spike_clusters, 
-                                                                        spike_templates, 
-                                                                        amplitudes, 
-                                                                        pc_features, 
-                                                                        template_features, 
+    spike_times, spike_clusters, spike_templates, amplitudes, pc_features, template_features = remove_spikes(spike_times,
+                                                                        spike_clusters,
+                                                                        spike_templates,
+                                                                        amplitudes,
+                                                                        pc_features,
+                                                                        template_features,
                                                                         spikes_to_remove,
                                                                         include_pcs)
 
@@ -119,52 +124,52 @@ def remove_double_counted_spikes(spike_times, spike_clusters, spike_templates,
         printProgressBar(idx1+1, len(unit_list))
 
         for_unit1 = np.where(spike_clusters == unit_id1)[0]
-        
+
         for idx2, unit_id2 in enumerate(unit_list[order]):
-            
+
             deltaX = np.squeeze(channel_pos[peak_chan_idx[unit_id2],0] - channel_pos[peak_chan_idx[unit_id1],0])
             deltaZ = np.squeeze(channel_pos[peak_chan_idx[unit_id2],1] - channel_pos[peak_chan_idx[unit_id1],1])
-            
+
             dist = pow( (pow(deltaX,2) + pow(deltaZ,2)), 0.5 )
-            
+
             if idx2 > idx1 and dist < params['between_unit_dist_um']:
-                
+
                 amp1 = cluster_amplitude[unit_id1]
                 amp2 = cluster_amplitude[unit_id2]
-                
+
                 for_unit2 = np.where(spike_clusters == unit_id2)[0]
 
                 to_remove1, to_remove2 = find_between_unit_overlap(spike_times[for_unit1], spike_times[for_unit2], amp1, amp2, between_unit_overlap_samples, params['deletion_mode'] )
 
-                overlap_matrix[idx1, idx2] = overlap_matrix[idx1, idx2] + len(to_remove1) 
+                overlap_matrix[idx1, idx2] = overlap_matrix[idx1, idx2] + len(to_remove1)
                 overlap_matrix[idx2, idx1] = overlap_matrix[idx2, idx1] + len(to_remove2)
 
                 spikes_to_remove = np.concatenate((spikes_to_remove, for_unit1[to_remove1], for_unit2[to_remove2]))
 
 
-    spike_times, spike_clusters, spike_templates, amplitudes, pc_features, template_features = remove_spikes(spike_times, 
+    spike_times, spike_clusters, spike_templates, amplitudes, pc_features, template_features = remove_spikes(spike_times,
                                                                          spike_clusters,
-                                                                         spike_templates, 
-                                                                         amplitudes, 
-                                                                         pc_features, 
-                                                                         template_features, 
+                                                                         spike_templates,
+                                                                         amplitudes,
+                                                                         pc_features,
+                                                                         template_features,
                                                                          np.unique(spikes_to_remove),
                                                                          include_pcs)
-#   build overlap summary 
+#   build overlap summary
     overlap_summary = np.zeros((num_clusters, 5), dtype=int )
     for idx1, unit_id1 in enumerate(unit_list[order]):
         overlap_summary[idx1,0] = unit_id1
         overlap_summary[idx1,1] = np.sum(spike_clusters == unit_id1)
         overlap_summary[idx1,2] = overlap_matrix[idx1,idx1]
         overlap_summary[idx1,3] = np.sum(overlap_matrix[idx1,:]) - overlap_matrix[idx1,idx1]
-        overlap_summary[idx1,4] = sorted_unit_list[np.argmax(overlap_matrix[idx1,:])]     
+        overlap_summary[idx1,4] = sorted_unit_list[np.argmax(overlap_matrix[idx1,:])]
 #   sort by label
     new_order = np.argsort(overlap_summary[:,0])
     overlap_summary = overlap_summary[new_order,:]
 
     return spike_times, spike_clusters, spike_templates, amplitudes, pc_features, template_features, overlap_matrix, overlap_summary
 
-                
+
 def find_within_unit_overlap(spike_train, overlap_window = 5):
 
     """
@@ -231,16 +236,16 @@ def find_between_unit_overlap(spike_train1, spike_train2, amp1, amp2, overlap_wi
 #   Note that when applying this method to spike trains from two different clusters, we are assuming that
 #   any pair within the overlap window will consist of a spike from each train. Therefore, only works if
 #   the "within_unit_overlap_window" is >= "between_unit_overlap_window".
-    
+
     if deletionMode == 'deleteFirst':
         spikes_to_remove = np.diff(sorted_train) < overlap_window
     else:
-        # Capturing the same spikes with different templates results in a 
+        # Capturing the same spikes with different templates results in a
         # group of spikes with fixed difference in time. Check for this peak,
         # remove spikes from the lower amplitude unit that occur ihe peak.
         spike_diffs = np.diff(sorted_train)
         cent_bin_edges = np.arange(0, (overlap_window+4),2)
-        cent_hist = np.histogram(spike_diffs,cent_bin_edges)   
+        cent_hist = np.histogram(spike_diffs,cent_bin_edges)
         cent_max = np.amax(cent_hist[0])
         cent_max_ind = np.argmax(cent_hist[0])
         rem_range = 2  # in bins, on either sideof peak. total bins removed = 2*rem_range + 1
@@ -250,7 +255,7 @@ def find_between_unit_overlap(spike_train1, spike_train2, amp1, amp2, overlap_wi
         # greater than 10X the minimum value
         if (cent_max_ind < len(cent_hist[0])-1 ) and (cent_max > 10*np.amin(cent_hist[0])) and (cent_max > 20) :
             cent_dig = np.digitize(spike_diffs,cent_bin_edges)
-            # Zero in digitized data => spike < lowest edge value. 
+            # Zero in digitized data => spike < lowest edge value.
             # so zero is an 'extra' value. Dig value that corresponds
             # to peak is therefore cent_max_ind + 1
             # remove peak and the two neighbor bins, as long as those bins are not edges
@@ -264,21 +269,21 @@ def find_between_unit_overlap(spike_train1, spike_train2, amp1, amp2, overlap_wi
             # elif (peak_val == 1):
             #     spikes_to_remove = (cent_dig == peak_val) | (cent_dig == peak_val+1)
             # elif (peak_val == max_val-1):
-            #     spikes_to_remove = (cent_dig == peak_val) | (cent_dig == peak_val-1) 
+            #     spikes_to_remove = (cent_dig == peak_val) | (cent_dig == peak_val-1)
             # else:
             #     print('problem with center histogram')
             #     spikes_to_remove = np.full(spike_diffs.shape,False)
         else:
             spikes_to_remove = np.full(spike_diffs.shape,False)
 
-# With either means of selecting which spikes to omit, only indlude cases where the 
+# With either means of selecting which spikes to omit, only indlude cases where the
 # two spikes are from different units
     spikes_to_remove = spikes_to_remove & (id_diffs != 0)
 
-    
+
     if deletionMode == 'deleteFirst':
 #   trim off the first member of the array of sorted inds; means the later spike will be picked for any pair
-        sorted_inds = original_inds[order][1:] 
+        sorted_inds = original_inds[order][1:]
         spikes_to_remove1 = sorted_inds[spikes_to_remove * (sorted_cluster_ids == 0)]
         spikes_to_remove2 = sorted_inds[spikes_to_remove * (sorted_cluster_ids == 1)]
     else:
@@ -286,7 +291,7 @@ def find_between_unit_overlap(spike_train1, spike_train2, amp1, amp2, overlap_wi
         lateInd = original_inds[order][1:]
         earlyInd = original_inds[order][0:(len(original_inds)-1)]
         if ( amp1 <= amp2 ):
-#       Remove spikes the cluster with lower amplitude; many duplicate cases are 
+#       Remove spikes the cluster with lower amplitude; many duplicate cases are
 #       fitting a tail on a large amplitude feature with a low amplitude spike
 #        if (len(spike_train1) < len(spike_train2)):
 #           Remove spikes from cluster with fewer spikes
@@ -294,15 +299,15 @@ def find_between_unit_overlap(spike_train1, spike_train2, amp1, amp2, overlap_wi
             late0 = lateInd[spikes_to_remove * (sorted_cluster_ids == 0)]
             early0 = earlyInd[spikes_to_remove * (sorted_cluster_ids == 1)]
             spikes_to_remove1 = np.concatenate((late0, early0))
-            spikes_to_remove2 = np.array([], dtype=int)        
+            spikes_to_remove2 = np.array([], dtype=int)
         else:
 #           Still have the first member of sorted_cluster_ids; to get cases where label 0 is 2nd, add 1
             late1 = lateInd[spikes_to_remove * (sorted_cluster_ids == 1)]
             early1 = earlyInd[spikes_to_remove * (sorted_cluster_ids == 0)]
             spikes_to_remove2 = np.concatenate((late1, early1))
-            spikes_to_remove1 = np.array([], dtype=int)        
-       
-        
+            spikes_to_remove1 = np.array([], dtype=int)
+
+
     return spikes_to_remove1, spikes_to_remove2
 
 
@@ -314,7 +319,7 @@ def remove_spikes(spike_times, spike_clusters, spike_templates, amplitudes, pc_f
     Inputs:
     ------
     spike_times : numpy.ndarray (num_spikes x 0)
-        Spike times in samples 
+        Spike times in samples
     spike_clusters : numpy.ndarray (num_spikes x 0)
         Cluster IDs for each spike time
     spike_templates : numpy.ndarray (num_spikes x 0)
@@ -341,7 +346,7 @@ def remove_spikes(spike_times, spike_clusters, spike_templates, amplitudes, pc_f
     spike_clusters = np.delete(spike_clusters, spikes_to_remove, 0)
     spike_templates = np.delete(spike_templates, spikes_to_remove, 0)
     amplitudes = np.delete(amplitudes, spikes_to_remove, 0)
-    
+
     if include_pcs:
         pc_features = np.delete(pc_features, spikes_to_remove, 0)
         template_features = np.delete(template_features, spikes_to_remove, 0)
@@ -350,18 +355,18 @@ def remove_spikes(spike_times, spike_clusters, spike_templates, amplitudes, pc_f
     return spike_times, spike_clusters, spike_templates, amplitudes, pc_features, template_features
 
 def align_spike_times(spike_times, spike_clusters, spikeglx_bin, output_dir, cWaves_path):
-    
+
     print('Calculating mean waveforms for aligh_spike_times using C_waves.')
 
     # assume cluster table version = 0;
     getSortResults(output_dir, 0)
-     
+
     # build paths to cluster and times tables, which are generated by
     # kilosort_helper module
     clus_table_npy = os.path.join(output_dir, 'clus_Table.npy' )
     clus_time_npy = os.path.join(output_dir, 'spike_times.npy' )
     clus_lbl_npy = os.path.join(output_dir, 'spike_clusters.npy' )
-    
+
     # path to the 'runit.bat' executable that calls C_Waves.
     # Essential in linux where C_Waves executable is only callable through runit
     if sys.platform.startswith('win'):
@@ -370,7 +375,7 @@ def align_spike_times(spike_times, spike_clusters, spikeglx_bin, output_dir, cWa
         exe_path = os.path.join(cWaves_path, 'runit.sh')
     else:
         print('unknown system, cannot run C_Waves')
-    
+
     cwaves_cmd = exe_path + ' -spikeglx_bin=' + spikeglx_bin + \
                             ' -clus_table_npy=' + clus_table_npy + \
                             ' -clus_time_npy=' + clus_time_npy + \
@@ -381,22 +386,22 @@ def align_spike_times(spike_times, spike_clusters, spikeglx_bin, output_dir, cWa
                             ' -num_spikes=5000' + \
                             ' -snr_radius=8' + \
                             ' -prefix=preprocess'
-                            
+
     print(cwaves_cmd)
-    
+
     # make the C_Waves call
     subprocess.call(cwaves_cmd)
-    
+
     # load snr and waveform arrays
     mean_waveform_fullpath = os.path.join(output_dir, 'preprocess_mean_waveforms.npy')
     snr_fullpath = os.path.join(output_dir, 'preprocess_cluster_snr.npy')
-    
+
     mean_waveforms = np.load(mean_waveform_fullpath)
     snr_array = np.load(snr_fullpath)
     (nClu, nChan, nt) = mean_waveforms.shape
-    
+
     peak_t = 19   #because pre_samples in C_Waves set to 20
-    
+
     # Loop over units
     for i in range(nClu):
         nSpike = snr_array[i,1]
@@ -405,16 +410,16 @@ def align_spike_times(spike_times, spike_clusters, spikeglx_bin, output_dir, cWa
             curr_wave = mean_waveforms[i,:,:]
             max_site = np.argmax(np.max(curr_wave,1) - np.min(curr_wave,1))
             max_site_wave = curr_wave[max_site,:]
-            
+
             min_v = abs(np.min(max_site_wave))
             max_v = abs(np.max(max_site_wave))
             min_t = np.argmin(max_site_wave)
             max_t = np.argmax(max_site_wave)
-            
+
             # align to min or max?
             if min_v > 30 and max_v > 30:
                 # set spike to to earlier of the two
-                if min_t <= max_t:               
+                if min_t <= max_t:
                    mean_peak_time = min_t
                 else:
                    mean_peak_time = max_t
@@ -424,12 +429,12 @@ def align_spike_times(spike_times, spike_clusters, spikeglx_bin, output_dir, cWa
                    mean_peak_time = min_t
                 else:
                     mean_peak_time = max_t
-               
+
             deltat = peak_t - mean_peak_time
             # print('nClu, deltat: ' + repr(i) + ', ' +  repr(deltat) )
             clu_ind = (spike_clusters == i)
             spike_times[clu_ind] = spike_times[clu_ind] - deltat
-            
-                
-    
+
+
+
     return spike_times
