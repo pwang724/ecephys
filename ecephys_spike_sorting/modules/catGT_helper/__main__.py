@@ -9,6 +9,8 @@ import numpy as np
 from pathlib import Path
 
 from ...common.utils import read_probe_json, get_repo_commit_date_and_hash, rms
+from ecephys_spike_sorting.scripts.helpers import SpikeGLX_utils
+
 
 def run_CatGT(args):
 
@@ -27,7 +29,7 @@ def run_CatGT(args):
         catGTexe_fullpath = catGTPath.replace('\\', '/') + "/runit.sh"
     else:
         print('unknown system, cannot run CatGt')
-
+   
     # common average referencing
     car_mode = args['catGT_helper_params']['car_mode']
     if car_mode == 'loccar':
@@ -40,20 +42,20 @@ def run_CatGT(args):
             outer_site = args['catGT_helper_params']['loccar_outer']
             car_str = ' -loccar=' + repr(inner_site) + ',' + repr(outer_site)
     elif car_mode == 'gbldmx':
-        car_str = ' -gbldmx'
+        car_str = ' -gbldmx'    
     elif car_mode == 'gblcar':
         car_str = ' -gblcar'
     elif car_mode == 'None' or car_mode == 'none':
         car_str = ''
-
+    
     # build max z string, assuming z is given in um from bottom row
 
     maxZ_str = '-maxZ=' + args['catGT_helper_params']['probe_string'] \
             + ',1,' + repr(args['catGT_helper_params']['maxZ_um'])
 
-
+    
     cmd_parts = list()
-
+    
     cmd_parts.append(catGTexe_fullpath)
     cmd_parts.append('-dir=' + args['directories']['npx_directory'])
     cmd_parts.append('-run=' + args['catGT_helper_params']['run_name'])
@@ -66,27 +68,29 @@ def run_CatGT(args):
         cmd_parts.append(maxZ_str)
     cmd_parts.append(args['catGT_helper_params']['cmdStr'])
     cmd_parts.append('-dest=' + args['directories']['extracted_data_directory'])
-
+    
     # print('cmd_parts')
 
     catGT_cmd = ' '        # use space as the separator for the command parts
     catGT_cmd = catGT_cmd.join(cmd_parts)
-
+    
     print('CatGT command line:' + catGT_cmd)
-
+    
     start = time.time()
     subprocess.Popen(catGT_cmd,shell='False').wait()
 
     execution_time = time.time() - start
-
-    # copy CatGT log file, which will be in the directory with the calling
+    
+    # copy CatGT log file, which will be in the directory with the calling 
     # python scripte, to the destination directory
     logPath = os.getcwd()
     logName = 'CatGT.log'
+   
+    first_gate, last_gate = SpikeGLX_utils.ParseGateStr(args['catGT_helper_params']['gate_string'])
+         
+    catgt_runName = 'catgt_' + args['catGT_helper_params']['run_name'] + '_g' + str(first_gate)
 
-
-    catgt_runName = 'catgt_' + args['catGT_helper_params']['run_name'] + '_g' + args['catGT_helper_params']['gate_string']
-
+    
     # build name for log copy
     catgt_logName = catgt_runName
     if 'ap' in args['catGT_helper_params']['stream_string']:
@@ -95,18 +99,18 @@ def run_CatGT(args):
     if 'ni' in args['catGT_helper_params']['stream_string']:
         catgt_logName = catgt_logName + '_ni'
     catgt_logName = catgt_logName + '_CatGT.log'
-
-
+    
+    
     catgt_runDir = os.path.join(args['directories']['extracted_data_directory'],catgt_runName)
     shutil.copyfile(os.path.join(logPath,logName), \
                     os.path.join(catgt_runDir,catgt_logName))
-
+    
     # if an fyi file was created, check if there is aleady an 'all_fyi.txt'
-    run_name = args['catGT_helper_params']['run_name'] + '_g' + args['catGT_helper_params']['gate_string']
+    run_name = args['catGT_helper_params']['run_name'] + '_g' + str(first_gate)
     fyi_path = os.path.join(catgt_runDir, (run_name + '_fyi.txt'))
     all_fyi_path =  os.path.join(catgt_runDir, (run_name + '_all_fyi.txt'))
     temp_path = os.path.join(catgt_runDir, 'temp.txt')
-    if Path(fyi_path).is_file():
+    if Path(fyi_path).is_file():        
         if Path(all_fyi_path).is_file():
             # append current fyi
             if os_str == 'linux':
@@ -120,20 +124,20 @@ def run_CatGT(args):
             os.remove(temp_path)
         else:
             # copy current fyi to all_fyi
-            shutil.copyfile(fyi_path, all_fyi_path)
-
-
+            shutil.copyfile(fyi_path, all_fyi_path)                    
+            
+    
     print('total time: ' + str(np.around(execution_time,2)) + ' seconds')
-
+    
     return {"execution_time" : execution_time} # output manifest
 
 
 def ParseProbeStr(probe_string):
-
+    
     # from a probe_string in a CatGT command line
-    # create a title for the log file which inludes all the
+    # create a title for the log file which inludes all the 
     # proceessed probes
-
+    
     str_list = probe_string.split(',')
     prb_title = ''
     for substr in str_list:
@@ -156,7 +160,7 @@ def main():
     """Main entry point:"""
     mod = ArgSchemaParser(schema_type=InputParameters,
                           output_schema_type=OutputParameters)
-
+    
     output = run_CatGT(mod.args)
 
     output.update({"input_parameters": mod.args})

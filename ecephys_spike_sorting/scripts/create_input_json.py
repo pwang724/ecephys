@@ -45,8 +45,9 @@ def createInputJson(output_file,
                     toStream_sync_params = 'SY=0,384,6,500',
                     niStream_sync_params = 'XA=0,1,3,500',
                     tPrime_3A = False,
-                    toStream_path_3A = None,
-                    fromStream_list_3A = None,
+                    toStream_path_3A = ' ',
+                    fromStream_list_3A = list(),
+                    ks_helper_noise_threshold = 20,
                     ks_doFilter = 0,
                     ks_remDup = 0,
                     ks_finalSplits = 1,
@@ -66,7 +67,8 @@ def createInputJson(output_file,
                     wm_spread_thresh = 0.12,
                     wm_site_range = 16,
                     qm_isi_thresh = 1.5/1000,
-                    include_pcs = True
+                    include_pcs = True,
+                    ks_nNeighbors_sites_fix = 0
                     ):
 
     BASEPATH = r'C:\Users\Peter_Wang_Alienware\Desktop'
@@ -91,6 +93,7 @@ def createInputJson(output_file,
     kilosort_output_tmp = r'D:\NPIX\KS_DATA_TEMP'
 
     # derived directory names
+
     modules_directory = os.path.join(ecephys_directory,'modules')
 
     if kilosort_output_directory is None \
@@ -135,7 +138,7 @@ def createInputJson(output_file,
 
 
 
-    # geometry params by probe type. expand the dictoionaries to add types
+    # geometry params by probe type. expand the dictionaries to add types
     # vertical probe pitch vs probe type
     vpitch = {'3A': 20, 'NP1': 20, 'NP21': 15, 'NP24': 15, 'NP1100': 6, 'NP1300':20, 'NP2013': 15}
     hpitch = {'3A': 32, 'NP1': 32, 'NP21': 32, 'NP24': 32, 'NP1100': 6, 'NP1300':48, 'NP2013': 32}
@@ -155,16 +158,20 @@ def createInputJson(output_file,
     # for a Np 1.0 probe, 163 um => 32 sites
     nrows = np.sqrt((np.square(ks_whiteningRadius_um) - np.square(hpitch.get(probe_type))))/vpitch.get(probe_type)
     ks_whiteningRange = int(round(2*nrows*nColumn.get(probe_type)))
-    # ks_whiteningRange = 32 # hard-coded
     if ks_whiteningRange > 384:
         ks_whiteningRange = 384
-
 
     # nNeighbors is the number of sites kilosort includes in a template.
     # Calculate the number of sites within that radisu.
     maxNeighbors = 64 # 64 for standard build of KS
     nrows = np.sqrt((np.square(ks_templateRadius_um) - np.square(hpitch.get(probe_type))))/vpitch.get(probe_type)
     ks_nNeighbors = int(round(2*nrows*nColumn.get(probe_type)))
+
+    # workaround for nonstandard patterns
+    print('ks_nNeighbors_sites_fix: ', ks_nNeighbors_sites_fix)
+    if ks_nNeighbors_sites_fix > 0:
+        ks_nNeighbors = ks_nNeighbors_sites_fix
+
     if ks_nNeighbors > maxNeighbors:
         ks_nNeighbors = maxNeighbors
     print('ks_nNeighbors: ' + repr(ks_nNeighbors))
@@ -256,6 +263,7 @@ def createInputJson(output_file,
             "spikeGLX_data" : True,
             "ks_make_copy": ks_make_copy,
             "surface_channel_buffer" : 15,
+            "noise_threshold" : ks_helper_noise_threshold,
 
             "kilosort2_params" :
             {
@@ -348,7 +356,7 @@ def createInputJson(output_file,
 
         "quality_metrics_params" : {
             "isi_threshold" : qm_isi_thresh,
-            "min_isi" : 0.00016,
+            "min_isi" : 0.000166,
             "tbin_sec" : 0.001,
             "max_radius_um" : 68,
             "max_spikes_for_unit" : 500,

@@ -10,7 +10,7 @@ from pathlib import Path
 import numpy as np
 
 from ...common.utils import catGT_ex_params_from_str
-
+from ecephys_spike_sorting.scripts.helpers import SpikeGLX_utils
 
 def call_TPrime(args):
 
@@ -32,13 +32,16 @@ def call_TPrime(args):
     start = time.time()
     
     # build paths to the input data for TPrime
+    first_gate, last_gate = SpikeGLX_utils.ParseGateStr(args['catGT_helper_params']['gate_string'])
     catGT_dest = args['directories']['extracted_data_directory']
-    run_name = args['catGT_helper_params']['run_name'] + '_g' + args['catGT_helper_params']['gate_string']
+    run_name = args['catGT_helper_params']['run_name'] + '_g' + str(first_gate)
     run_dir_name = 'catgt_' + run_name
     prb_dir_prefix = run_name + '_imec'
     
     run_directory = os.path.join( catGT_dest, run_dir_name ) # extracted edge files for aux data reside in run directory
     sync_period = args['tPrime_helper_params']['sync_period']
+    
+    sort_out_tag = args['tPrime_helper_params']['sort_out_tag']
     
     # check for presence of an fyi file, indicating run with catgt 3.0 or later
     fyi_path = run_directory.replace('\\', '/') + '/' + run_name + '_all_fyi.txt'
@@ -63,7 +66,7 @@ def call_TPrime(args):
         if toStream_js == 2:
             # if toStream is an imec probe, create the file of spike times in sec
             prb_dir = prb_dir_prefix + str(toStream_ip)
-            ks_outdir = 'imec' + str(toStream_ip) + '_ks2'        
+            ks_outdir = 'imec' + str(toStream_ip) + '_' + sort_out_tag      
             st_file = os.path.join(run_directory, prb_dir, ks_outdir, 'spike_times.npy')
             # convert to seconds; if bNPY = True, returned file is an npy file
             # otherwise, text.
@@ -79,7 +82,7 @@ def call_TPrime(args):
         for i, id in enumerate(from_list_ids):
             if id[0] == 2:      # imec stream
                 prb_dir = prb_dir_prefix + str(id[1])
-                ks_outdir = 'imec' + str(id[1]) + '_ks2'
+                ks_outdir = 'imec' + str(id[1]) + '_' + sort_out_tag
                 st_file = os.path.join(run_directory, prb_dir, ks_outdir, 'spike_times.npy')
                 # convert to seconds; if bNPY = True, returned file is an npy file
                 # otherwise, text.

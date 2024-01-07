@@ -195,7 +195,7 @@ def calculate_waveform_metrics_from_avg(avg_waveform,
         mean_1D_waveform, timestamps)
     recovery_slope = calculate_waveform_recovery_slope(
         mean_1D_waveform, timestamps)
-    #
+
     amplitude, spread, velocity_above, velocity_below = calculate_2D_features(
         mean_2D_waveform, timestamps, local_peak, site_x, site_y, spread_threshold, site_range)
 
